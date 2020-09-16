@@ -116,7 +116,6 @@ contract LoanTokenSettings is AdvancedTokenStorage {
         name = _name;
         symbol = _symbol;
         decimals = IERC20(loanTokenAddress).decimals();
-
-        initialPrice = WEI_PRECISION; // starting price of 1
+        totalSupply_ = WEI_PRECISION; // starting supply of 1 - this is to save future gas cost in calculations
     }
 }

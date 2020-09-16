@@ -660,7 +660,7 @@ contract LoanTokenLogicStandard is AdvancedToken, GasTokenUser {
         if (msg.value == 0) {
             _safeTransferFrom(loanTokenAddress, msg.sender, address(this), depositAmount, "18");
         } else {
-            require(msg.value == depositAmount, "18");
+            require(msg.value == depositAmount, "20");
             IWeth(wethToken).deposit.value(depositAmount)();
         }
 
@@ -1064,12 +1064,9 @@ contract LoanTokenLogicStandard is AdvancedToken, GasTokenUser {
         view
         returns (uint256)
     {
-        uint256 totalTokenSupply = totalSupply_;
-
-        return totalTokenSupply != 0 ?
-            assetSupply
+        return assetSupply
                 .mul(WEI_PRECISION)
-                .div(totalTokenSupply) : initialPrice;
+                .div(totalSupply_) ;
     }
 
     function _avgBorrowInterestRate(
@@ -1237,16 +1234,14 @@ contract LoanTokenLogicStandard is AdvancedToken, GasTokenUser {
         view
         returns (uint256) // assetSupply
     {
-        if (totalSupply_ != 0) {
-            uint256 assetsBalance = _flTotalAssetSupply; // temporary locked totalAssetSupply during a flash loan transaction
-            if (assetsBalance == 0) {
-                assetsBalance = _underlyingBalance()
-                    .add(totalAssetBorrow());
-            }
-
-            return assetsBalance
-                .add(interestUnPaid);
+        uint256 assetsBalance = _flTotalAssetSupply; // temporary locked totalAssetSupply during a flash loan transaction
+        if (assetsBalance == 0) {
+            assetsBalance = _underlyingBalance()
+                .add(totalAssetBorrow());
         }
+
+        return assetsBalance
+            .add(interestUnPaid);
     }
 
     function _adjustValue(
