@@ -40,6 +40,7 @@ compiler:
             runs: 200
         remappings: 
             - "@openzeppelin=./node_modules/@openzeppelin/"
+            - "@uniswap=./node_modules/@uniswap/"
 
 console:
     show_colors: true
