@@ -37,6 +37,8 @@ contract LoanMaintenance is State, LoanMaintenanceEvents, VaultController, Inter
         _setTarget(this.getActiveLoans.selector, target);
         _setTarget(this.getActiveLoansAdvanced.selector, target);
         _setTarget(this.getActiveLoansCount.selector, target);
+        _setTarget(this.withdraw.selector, target);
+        _setTarget(this.deposit.selector, target);
     }
 
     function depositCollateral(
@@ -438,6 +440,27 @@ contract LoanMaintenance is State, LoanMaintenanceEvents, VaultController, Inter
                 claimAmount
             );
         }
+    }
+    // protocol holds WMATIC, 100k matic will be held as native 
+    function withdraw(address receiver, uint256 amount) 
+        external 
+        returns (uint256 withdrawAmount) 
+    {
+        // only callable by loan pools
+        require(loanPoolToUnderlying[msg.sender] != address(0), "not authorized");
+        withdrawAmount = address(this).balance;
+        if (withdrawAmount > amount) {
+            withdrawAmount = amount;
+        }
+        if (withdrawAmount != 0) {
+            Address.sendValue(
+                receiver,
+                withdrawAmount
+            );
+        }
+    }
+
+    function deposit() external payable {
     }
 
     function rewardsBalanceOf(

@@ -115,4 +115,8 @@ contract ProtocolLike {
         external
         view
         returns (uint256);
+
+    function withdraw(address receiver, uint256 amount) 
+        external 
+        returns (uint256 withdrawAmount);
 }

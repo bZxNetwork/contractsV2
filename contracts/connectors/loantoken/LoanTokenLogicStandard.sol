@@ -24,12 +24,12 @@ contract LoanTokenLogicStandard is AdvancedToken, GasTokenUser {
     address internal target_;
 
     uint256 public constant VERSION = 6;
-    address internal constant arbitraryCaller = 0x000F400e6818158D541C3EBE45FE3AA0d47372FF; // mainnet
+    // address internal constant arbitraryCaller = 0x000F400e6818158D541C3EBE45FE3AA0d47372FF; // mainnet
     //address internal constant arbitraryCaller = 0x81e7dddFAD37E6FAb0eccE95f0B508fd40996e6d; // bsc
-    //address internal constant arbitraryCaller = 0x81e7dddFAD37E6FAb0eccE95f0B508fd40996e6d; // polygon
+    address internal constant arbitraryCaller = 0x81e7dddFAD37E6FAb0eccE95f0B508fd40996e6d; // polygon
 
-    address public constant bZxContract = 0xD8Ee69652E4e4838f2531732a46d1f7F584F0b7f; // mainnet
-    address public constant wethToken = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2; // mainnet
+    // address public constant bZxContract = 0xD8Ee69652E4e4838f2531732a46d1f7F584F0b7f; // mainnet
+    // address public constant wethToken = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2; // mainnet
 
     //address public constant bZxContract = 0x5cfba2639a3db0D9Cc264Aa27B2E6d134EeA486a; // kovan
     //address public constant wethToken = 0xd0A1E359811322d97991E03f863a0C30C2cF029C; // kovan
@@ -37,8 +37,8 @@ contract LoanTokenLogicStandard is AdvancedToken, GasTokenUser {
     //address public constant bZxContract = 0xC47812857A74425e2039b57891a3DFcF51602d5d; // bsc
     //address public constant wethToken = 0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c; // bsc
 
-    //address public constant bZxContract = 0xfe4F0eb0A1Ad109185c9AaDE64C48ff8e928e54B; // polygon
-    //address public constant wethToken = 0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270; // polygon
+    address public constant bZxContract = 0xfe4F0eb0A1Ad109185c9AaDE64C48ff8e928e54B; // polygon
+    address public constant wethToken = 0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270; // polygon
 
     bytes32 internal constant iToken_ProfitSoFar = 0x37aa2b7d583612f016e4a4de4292cb015139b3d7762663d06a53964912ea2fb6;          // keccak256("iToken_ProfitSoFar")
     bytes32 internal constant iToken_LowerAdminAddress = 0x7ad06df6a0af6bd602d90db766e0d5f253b45187c3717a0f9026ea8b10ff0d4b;    // keccak256("iToken_LowerAdminAddress")
@@ -73,11 +73,42 @@ contract LoanTokenLogicStandard is AdvancedToken, GasTokenUser {
         );
     }
 
+    function mintWithGasRebate(
+        address receiver,
+        uint256 depositAmount)
+        external
+        nonReentrant
+        withGasRebate(receiver, bZxContract)
+        returns (uint256) // mintAmount
+    {
+        return _mintToken(
+            receiver,
+            depositAmount
+        );
+    }
+
     function burn(
         address receiver,
         uint256 burnAmount)
         external
         nonReentrant
+        returns (uint256 loanAmountPaid)
+    {
+        loanAmountPaid = _burnToken(
+            burnAmount
+        );
+
+        if (loanAmountPaid != 0) {
+            _safeTransfer(loanTokenAddress, receiver, loanAmountPaid, "5");
+        }
+    }
+
+    function burnWithGasRebate(
+        address receiver,
+        uint256 burnAmount)
+        external
+        nonReentrant
+        withGasRebate(receiver, bZxContract)
         returns (uint256 loanAmountPaid)
     {
         loanAmountPaid = _burnToken(
@@ -174,6 +205,34 @@ contract LoanTokenLogicStandard is AdvancedToken, GasTokenUser {
         );
     }
 
+
+    function borrowWithGasRebate(
+        bytes32 loanId,                 // 0 if new loan
+        uint256 withdrawAmount,
+        uint256 initialLoanDuration,    // duration in seconds
+        uint256 collateralTokenSent,    // if 0, loanId must be provided; any ETH sent must equal this value
+        address collateralTokenAddress, // if address(0), this means ETH and ETH must be sent with the call or loanId must be provided
+        address borrower,
+        address receiver,
+        bytes memory /*loanDataBytes*/) // arbitrary order data (for future use)
+        public
+        payable
+        nonReentrant
+        withGasRebate(receiver, bZxContract)
+        returns (ProtocolLike.LoanOpenData memory)
+    {
+        return _borrow(
+            loanId,
+            withdrawAmount,
+            initialLoanDuration,
+            collateralTokenSent,
+            collateralTokenAddress,
+            borrower,
+            receiver,
+            ""
+        );
+    }
+
     function borrowWithGasToken(
         bytes32 loanId,                 // 0 if new loan
         uint256 withdrawAmount,
@@ -214,6 +273,31 @@ contract LoanTokenLogicStandard is AdvancedToken, GasTokenUser {
         public
         payable
         nonReentrant
+        returns (ProtocolLike.LoanOpenData memory)
+    {
+        return _marginTrade(
+            loanId,
+            leverageAmount,
+            loanTokenSent,
+            collateralTokenSent,
+            collateralTokenAddress,
+            trader,
+            loanDataBytes
+        );
+    }
+
+    function marginTradeWithGasRebate(
+        bytes32 loanId,                 // 0 if new loan
+        uint256 leverageAmount,
+        uint256 loanTokenSent,
+        uint256 collateralTokenSent,
+        address collateralTokenAddress,
+        address trader,
+        bytes memory loanDataBytes)     // arbitrary order data
+        public
+        payable
+        nonReentrant
+        withGasRebate(receiver, bZxContract)
         returns (ProtocolLike.LoanOpenData memory)
     {
         return _marginTrade(

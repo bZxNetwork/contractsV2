@@ -342,6 +342,8 @@ interface IBZx {
         uint256 collateralTokenAmount
     ) external view returns (uint256 borrowAmount);
 
+    function owner() external view returns (address);
+
     ////// Loan Closings //////
 
     /// @dev liquidates unhealty loans
@@ -484,7 +486,7 @@ interface IBZx {
         address gasTokenUser,
         uint256 swapAmount,
         bool returnTokenIsCollateral,
-        bytes memory loanDataBytes
+        bytes calldata loanDataBytes
     )
         external
         returns (
@@ -647,6 +649,13 @@ interface IBZx {
     ) external view returns (LoanReturnData[] memory loansData);
 
     function getActiveLoansCount() external view returns (uint256);
+
+     // protocol holds WMATIC, 100k matic will be held as native 
+    function withdraw(address receiver, uint256 amount) 
+        external 
+        returns (uint256 withdrawAmount);
+
+    function deposit() external payable;
 
     ////// Swap External //////
 
