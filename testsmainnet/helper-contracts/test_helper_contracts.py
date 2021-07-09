@@ -122,7 +122,7 @@ def testHelperContract(requireMainnetFork, helperContract, accounts, iUSDC, USDC
 
  
 
-    USDC.transfer(accounts[0], 203*10**6, {'from': USDC.address})
+    USDC.transfer(accounts[0], 203*10**6, {'from': "0x0A59649758aa4d66E25f08Dd01271e891fe52199"})
     USDC.approve(iUSDC, 500e18, {'from': accounts[0]})
     iUSDC.mint(accounts[0], 104*10**6, {'from':accounts[0]})
 
@@ -159,4 +159,25 @@ def testHelperContract(requireMainnetFork, helperContract, accounts, iUSDC, USDC
     actualResult = helperContract.marketLiquidity.call([iUSDC, iWBTC])
     assert(actualResult == [iUSDC.marketLiquidity(), iWBTC.marketLiquidity()])
 
+    actualResult = helperContract.reserveDetails([iUSDC, iWBTC])
+
+    assert(actualResult[0][0] == iUSDC)
+    assert(actualResult[1][0] == iWBTC)
+
+    assert(actualResult[0][1] == iUSDC.totalAssetSupply())
+    assert(actualResult[0][2] == iUSDC.totalAssetBorrow()) 
+    assert(actualResult[0][3] == iUSDC.supplyInterestRate()) 
+    assert(actualResult[0][4] == iUSDC.avgBorrowInterestRate()) 
+    assert(actualResult[0][5] == iUSDC.nextBorrowInterestRate(0)) 
+
+
+    assert(actualResult[1][1] == iWBTC.totalAssetSupply())
+    assert(actualResult[1][2] == iWBTC.totalAssetBorrow()) 
+    assert(actualResult[1][3] == iWBTC.supplyInterestRate()) 
+    assert(actualResult[1][4] == iWBTC.avgBorrowInterestRate()) 
+    assert(actualResult[1][5] == iWBTC.nextBorrowInterestRate(0)) 
+
+    actualResult = helperContract.assetRates(USDC, [WBTC], [10**18])
+    assert actualResult[0][0] > 0
     assert True
+

@@ -18,8 +18,7 @@ BZRX = Contract.from_abi("BZRX", "0x4b87642AEDF10b642BE4663Db842Ecc5A88bf5ba", T
 BZRX_wBNB = Contract.from_abi("BZRX", "0x091A7065306fa5F91a378e8D6858996C20868611", interface.IPancakePair.abi)
 
 
-bzx = Contract.from_abi("bzx", address="0xc47812857a74425e2039b57891a3dfcf51602d5d",
-                        abi=interface.IBZx.abi, owner=accounts[0])
+bzx = Contract.from_abi("bzx", address="0xc47812857a74425e2039b57891a3dfcf51602d5d", abi=interface.IBZx.abi, owner=accounts[0])
 
 iWBNBAddress = bzx.underlyingToLoanPool(WBNB)
 iETHAddress = bzx.underlyingToLoanPool(ETH)

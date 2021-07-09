@@ -8,7 +8,7 @@ pragma solidity 0.5.17;
 import "../interfaces/IERC20.sol";
 import "../interfaces/IUniswapV2Router.sol";
 import "./interfaces/ICurve3Pool.sol";
-import "./interfaces/IBZxPartial.sol";
+import "../../interfaces/IBZx.sol";
 
 
 contract StakingConstants {
@@ -26,7 +26,7 @@ contract StakingConstants {
 
     IUniswapV2Router public constant uniswapRouter = IUniswapV2Router(0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D);
     ICurve3Pool public constant curve3pool = ICurve3Pool(0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7);
-    IBZxPartial public constant bZx = IBZxPartial(0xD8Ee69652E4e4838f2531732a46d1f7F584F0b7f);
+    IBZx public constant bZx = IBZx(0xD8Ee69652E4e4838f2531732a46d1f7F584F0b7f);
 
     uint256 public constant cliffDuration =                15768000; // 86400 * 365 * 0.5
     uint256 public constant vestingDuration =              126144000; // 86400 * 365 * 4

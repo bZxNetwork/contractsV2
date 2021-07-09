@@ -7,7 +7,7 @@ pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
 import "./AdvancedTokenStorage.sol";
-import "./interfaces/ProtocolSettingsLike.sol";
+import "../../../interfaces/IBZx.sol";
 
 
 contract LoanTokenSettings is AdvancedTokenStorage {

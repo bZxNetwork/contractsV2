@@ -385,6 +385,6 @@ contract PriceFeeds_BSC is Constants, Ownable {
         view
         returns (uint256 gasPrice)
     {
-        return 10000000000;
+        return 10e9;
     }
 }

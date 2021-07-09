@@ -3,7 +3,7 @@ pragma solidity 0.6.12;
 /// SPDX-License-Identifier: MIT
 
 import "@openzeppelin/contracts/utils/Address.sol";
-import "./Upgradeable.sol";
+import "./interfaces/Upgradeable.sol";
 
 
 contract Proxy is Upgradeable {

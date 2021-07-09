@@ -177,7 +177,14 @@ contract SwapsUser is State, SwapsEvents, FeesHelper {
 
         bool success;
         (success, data) = swapsImpl.delegatecall(data);
-        require(success, "swap failed");
+        if (!success) {
+            assembly {
+                let ptr := mload(0x40)
+                let size := returndatasize
+                returndatacopy(ptr, 0, size)
+                revert(ptr, size)
+            }
+        }
 
         (destTokenAmountReceived, sourceTokenAmountUsed) = abi.decode(data, (uint256, uint256));
     }

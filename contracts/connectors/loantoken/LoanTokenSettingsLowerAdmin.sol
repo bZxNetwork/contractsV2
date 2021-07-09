@@ -7,7 +7,7 @@ pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
 import "./AdvancedTokenStorage.sol";
-import "./interfaces/ProtocolSettingsLike.sol";
+import "../../../interfaces/IBZx.sol";
 
 
 contract LoanTokenSettingsLowerAdmin is AdvancedTokenStorage {
@@ -16,6 +16,7 @@ contract LoanTokenSettingsLowerAdmin is AdvancedTokenStorage {
     address public constant bZxContract = 0xD8Ee69652E4e4838f2531732a46d1f7F584F0b7f; // mainnet
     //address public constant bZxContract = 0x5cfba2639a3db0D9Cc264Aa27B2E6d134EeA486a; // kovan
     //address public constant bZxContract = 0xC47812857A74425e2039b57891a3DFcF51602d5d; // bsc
+    //address public constant bZxContract = 0xfe4F0eb0A1Ad109185c9AaDE64C48ff8e928e54B; // polygon
 
     bytes32 internal constant iToken_LowerAdminAddress = 0x7ad06df6a0af6bd602d90db766e0d5f253b45187c3717a0f9026ea8b10ff0d4b;    // keccak256("iToken_LowerAdminAddress")
 
@@ -38,7 +39,7 @@ contract LoanTokenSettingsLowerAdmin is AdvancedTokenStorage {
     }
 
     function setupLoanParams(
-        LoanParamsStruct.LoanParams[] memory loanParamsList,
+        IBZx.LoanParams[] memory loanParamsList,
         bool areTorqueLoans)
         public
         onlyAdmin
@@ -50,7 +51,7 @@ contract LoanTokenSettingsLowerAdmin is AdvancedTokenStorage {
             loanParamsList[i].loanToken = _loanTokenAddress;
             loanParamsList[i].maxLoanTerm = areTorqueLoans ? 0 : 28 days;
         }
-        loanParamsIdList = ProtocolSettingsLike(bZxContract).setupLoanParams(loanParamsList);
+        loanParamsIdList = IBZx(bZxContract).setupLoanParams(loanParamsList);
         for (uint256 i = 0; i < loanParamsIdList.length; i++) {
             loanParamsIds[uint256(keccak256(abi.encodePacked(
                 loanParamsList[i].collateralToken,
@@ -77,7 +78,7 @@ contract LoanTokenSettingsLowerAdmin is AdvancedTokenStorage {
             delete loanParamsIds[id];
         }
 
-        ProtocolSettingsLike(bZxContract).disableLoanParams(loanParamsIdList);
+        IBZx(bZxContract).disableLoanParams(loanParamsIdList);
     }
 
     // These params should be percentages represented like so: 5% = 5000000000000000000

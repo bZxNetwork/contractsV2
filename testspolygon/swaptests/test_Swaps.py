@@ -33,7 +33,7 @@ def test_swap_negative(requireMaticFork, bzx, accounts, ETH, USDC):
     with reverts("sourceTokenAmount == 0"):
         bzx.swapExternal(USDC, ETH, accounts[1], accounts[1], 0, 0, bytes(0), {'from':accounts[1]})
 
-    with reverts("swap failed"):
+    with reverts("source amount too high"):
         bzx.swapExternal(USDC, ETH, accounts[1], accounts[1], 100e6, 100e18, bytes(0), {'from':accounts[1]})
 
     with reverts("SafeERC20: low-level call failed"):

@@ -15,8 +15,10 @@ import "../ISwapsImpl.sol";
 contract SwapsImplUniswapV2_POLYGON is State, ISwapsImpl {
     using SafeERC20 for IERC20;
 
-    // QuickSwap
-    address public constant uniswapRouter = 0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff;
+    address public constant uniswapRouter = 0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506; // Sushiswap
+    //address public constant uniswapRouter = 0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff; // QuickSwap
+
+    address public constant eth = 0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619;
     address public constant dai = 0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063;
     address public constant usdc = 0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174;
     address public constant usdt = 0xc2132D05D31c914a87C6611C10748AEb04B58e8F;
@@ -112,6 +114,15 @@ contract SwapsImplUniswapV2_POLYGON is State, ISwapsImpl {
                 }
             }
 
+            if (sourceTokenAddress != eth && destTokenAddress != eth) {
+                path[1] = eth;
+                tmpValue = _getAmountOut(amountIn, path);
+                if (tmpValue > amountOut) {
+                    amountOut = tmpValue;
+                    midToken = eth;
+                }
+            }
+
             if (sourceTokenAddress != dai && destTokenAddress != dai) {
                 path[1] = dai;
                 tmpValue = _getAmountOut(amountIn, path);
@@ -169,6 +180,15 @@ contract SwapsImplUniswapV2_POLYGON is State, ISwapsImpl {
                 if (tmpValue < amountIn) {
                     amountIn = tmpValue;
                     midToken = address(wethToken);
+                }
+            }
+
+            if (sourceTokenAddress != eth && destTokenAddress != eth) {
+                path[1] = eth;
+                tmpValue = _getAmountIn(amountOut, path);
+                if (tmpValue < amountIn) {
+                    amountIn = tmpValue;
+                    midToken = eth;
                 }
             }
 

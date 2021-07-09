@@ -52,6 +52,12 @@ contract LoanMaintenanceEvents {
         uint256 amount
     );
 
+    event TransferLoan(
+        address indexed currentOwner,
+        address indexed newOwner,
+        bytes32 indexed loanId
+    );
+
     enum LoanType {
         All,
         Margin,
