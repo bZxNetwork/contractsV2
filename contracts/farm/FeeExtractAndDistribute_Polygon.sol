@@ -14,21 +14,21 @@ import "../../interfaces/IBZx.sol";
 import "./interfaces/IMasterChefPartial.sol";
 import "./interfaces/IPriceFeeds.sol";
 
-contract FeeExtractAndDistribute_BSC is Upgradeable {
+contract FeeExtractAndDistribute_Polygon is Upgradeable {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
-    IBZx public constant bZx = IBZx(0xC47812857A74425e2039b57891a3DFcF51602d5d);
+    IBZx public constant bZx = IBZx(0xfe4F0eb0A1Ad109185c9AaDE64C48ff8e928e54B);
     IMasterChefPartial public constant chef =
-        IMasterChefPartial(0x1FDCA2422668B961E162A8849dc0C2feaDb58915);
+        IMasterChefPartial(0xd39Ff512C3e55373a30E94BB1398651420Ae1D43);
 
-    address public constant BGOV = 0xf8E026dC4C0860771f691EcFFBbdfe2fa51c77CF;
-    address public constant BNB = 0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c;
-    address public constant BZRX = 0x4b87642AEDF10b642BE4663Db842Ecc5A88bf5ba;
-    address public constant iBZRX = 0xA726F2a7B200b03beB41d1713e6158e0bdA8731F;
+    address public constant PGOV = 0xd5d84e75f48E75f01fb2EB6dFD8eA148eE3d0FEb;
+    address public constant MATIC = 0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270;
+    address public constant BZRX = 0x54cFe73f2c7d0c4b62Ab869B473F5512Dc0944D2;
+    address public constant iBZRX = 0x97dfbEF4eD5a7f63781472Dbc69Ab8e5d7357cB9;
 
-    IUniswapV2Router public constant pancakeRouterV2 =
-        IUniswapV2Router(0x10ED43C718714eb63d5aA57B78B54704E256024E);
+    IUniswapV2Router public constant swapsRouterV2 =
+        IUniswapV2Router(0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506); // Sushiswap
 
     address internal constant ZERO_ADDRESS = address(0);
 
@@ -89,47 +89,47 @@ contract FeeExtractAndDistribute_BSC is Upgradeable {
         );
 
         for (uint256 i = 0; i < assets.length; i++) {
-            require(assets[i] != BGOV, "asset not supported");
+            require(assets[i] != PGOV, "asset not supported");
             exportedFees[assets[i]] = exportedFees[assets[i]].add(amounts[i]);
         }
 
-        uint256 bnbOutput = exportedFees[BNB];
-        exportedFees[BNB] = 0;
+        uint256 maticOutput = exportedFees[MATIC];
+        exportedFees[MATIC] = 0;
 
         address asset;
         uint256 amount;
         for (uint256 i = 0; i < assets.length; i++) {
             asset = assets[i];
-            if (asset == BGOV || asset == BZRX || asset == BNB) {
+            if (asset == PGOV || asset == BZRX || asset == MATIC) {
                 continue;
             }
             amount = exportedFees[asset];
             exportedFees[asset] = 0;
 
             if (amount != 0) {
-                bnbOutput += _swapWithPair(asset, BNB, amount);
+                maticOutput += _swapWithPair(asset, MATIC, amount);
             }
         }
 
-        if (bnbOutput != 0) {
-            amount = (bnbOutput * 15e18) / 1e20; // burn (15%)
+        if (maticOutput != 0) {
+            amount = (maticOutput * 15e18) / 1e20; // burn (15%)
             uint256 sellAmount = amount; // sell for BZRX (15%)
-            uint256 distributeAmount = (bnbOutput * 50e18) / 1e20; // distribute to stakers (50%)
-            bnbOutput -= (amount + sellAmount + distributeAmount);
+            uint256 distributeAmount = (maticOutput * 50e18) / 1e20; // distribute to stakers (50%)
+            maticOutput -= (amount + sellAmount + distributeAmount);
 
-            uint256 bgovAmount = _swapWithPair(BNB, BGOV, amount);
-            emit AssetSwap(msg.sender, BNB, BGOV, amount, bgovAmount);
+            uint256 pgovAmount = _swapWithPair(MATIC, PGOV, amount);
+            emit AssetSwap(msg.sender, MATIC, PGOV, amount, pgovAmount);
 
             // burn baby burn (15% of original amount)
-            IERC20(BGOV).transfer(
+            IERC20(PGOV).transfer(
                 0x000000000000000000000000000000000000dEaD,
-                bgovAmount
+                pgovAmount
             );
-            emit AssetBurn(msg.sender, BGOV, bgovAmount);
+            emit AssetBurn(msg.sender, PGOV, pgovAmount);
 
             // buy and distribute BZRX
             uint256 buyAmount = IPriceFeeds(bZx.priceFeeds()).queryReturn(
-                BNB,
+                MATIC,
                 BZRX,
                 sellAmount
             );
@@ -138,7 +138,7 @@ contract FeeExtractAndDistribute_BSC is Upgradeable {
                 amount = sellAmount.mul(availableForBuy).div(buyAmount);
                 buyAmount = availableForBuy;
 
-                exportedFees[BNB] += (sellAmount - amount); // retain excess BNB for next time
+                exportedFees[MATIC] += (sellAmount - amount); // retain excess MATIC for next time
                 sellAmount = amount;
             }
             tokenHeld[IERC20(BZRX)] = availableForBuy - buyAmount;
@@ -149,12 +149,12 @@ contract FeeExtractAndDistribute_BSC is Upgradeable {
 
             if (buyAmount != 0) {
                 IERC20(BZRX).safeTransfer(iBZRX, buyAmount);
-                emit AssetSwap(msg.sender, BNB, BZRX, sellAmount, buyAmount);
+                emit AssetSwap(msg.sender, MATIC, BZRX, sellAmount, buyAmount);
             }
 
-            IWethERC20(BNB).withdraw(bnbOutput + sellAmount + distributeAmount);
+            IWethERC20(MATIC).withdraw(maticOutput + sellAmount + distributeAmount);
             chef.addAltReward.value(distributeAmount);
-            Address.sendValue(fundsWallet, bnbOutput + sellAmount);
+            Address.sendValue(fundsWallet, maticOutput + sellAmount);
 
             emit ExtractAndDistribute();
         }
@@ -169,7 +169,7 @@ contract FeeExtractAndDistribute_BSC is Upgradeable {
         path[0] = inAsset;
         path[1] = outAsset;
 
-        uint256[] memory amounts = pancakeRouterV2.swapExactTokensForTokens(
+        uint256[] memory amounts = swapsRouterV2.swapExactTokensForTokens(
             inAmount,
             1, // amountOutMin
             path,
@@ -193,14 +193,14 @@ contract FeeExtractAndDistribute_BSC is Upgradeable {
     function setFeeTokens(address[] calldata tokens) external onlyOwner {
         currentFeeTokens = tokens;
         for (uint256 i = 0; i < tokens.length; i++) {
-            IERC20(tokens[i]).safeApprove(address(pancakeRouterV2), 0);
+            IERC20(tokens[i]).safeApprove(address(swapsRouterV2), 0);
             IERC20(tokens[i]).safeApprove(
-                address(pancakeRouterV2),
+                address(swapsRouterV2),
                 uint256(-1)
             );
         }
-        IERC20(BGOV).safeApprove(address(chef), 0);
-        IERC20(BGOV).safeApprove(address(chef), uint256(-1));
+        IERC20(PGOV).safeApprove(address(chef), 0);
+        IERC20(PGOV).safeApprove(address(chef), uint256(-1));
     }
 
     function depositToken(IERC20 token, uint256 amount) external onlyOwner {
