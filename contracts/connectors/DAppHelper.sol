@@ -3,13 +3,35 @@
  * Licensed under the Apache License, Version 2.0.
  */
 
-pragma solidity >=0.6.0 <0.8.4;
+pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 import "../../interfaces/IBZx.sol";
 import "../../interfaces/IPriceFeeds.sol";
-import "../../interfaces/IToken.sol";
 
-// this contract is deprecated use HelperImpl
+
+contract DAppHelper_TokenLike {
+    string public name;
+    uint8 public decimals;
+    string public symbol;
+    function totalSupply() public view returns (uint256);
+    function balanceOf(address _who) public view returns (uint256);
+    function allowance(address _owner, address _spender) public view returns (uint256);
+}
+
+contract DAppHelper_iTokenLike is DAppHelper_TokenLike {
+    function loanTokenAddress() public view returns (address);
+    function tokenPrice() public view returns (uint256);
+    function totalAssetSupply() public view returns (uint256);
+    function totalAssetBorrow() public view returns (uint256);
+    function supplyInterestRate() public view returns (uint256);
+    function avgBorrowInterestRate() public view returns (uint256);
+    function nextBorrowInterestRate(
+        uint256 borrowAmount)
+        public
+        view
+        returns (uint256);
+}
+
 contract DAppHelper {
 
     address public constant bZxProtocol = 0xD8Ee69652E4e4838f2531732a46d1f7F584F0b7f; // mainnet
@@ -69,7 +91,7 @@ contract DAppHelper {
         vaultBalance = new uint256[](tokenAddresses.length);
 
         for (uint256 i=0; i < tokenAddresses.length; i++) {
-            IToken token = IToken(tokenAddresses[i]);
+            DAppHelper_iTokenLike token = DAppHelper_iTokenLike(tokenAddresses[i]);
             totalAssetSupply[i] = token.totalAssetSupply();
             totalAssetBorrow[i] = token.totalAssetBorrow();
             supplyInterestRate[i] = token.supplyInterestRate();
@@ -77,7 +99,7 @@ contract DAppHelper {
             torqueBorrowInterestRate[i] = token.nextBorrowInterestRate(0);
 
             address loanToken = token.loanTokenAddress();
-            vaultBalance[i] = IToken(loanToken).balanceOf(bZxProtocol);
+            vaultBalance[i] = DAppHelper_TokenLike(loanToken).balanceOf(bZxProtocol);
         }
     }
 }

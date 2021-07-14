@@ -7,7 +7,7 @@ pragma solidity 0.5.17;
 
 import "../../openzeppelin/SafeMath.sol";
 import "../../openzeppelin/SignedSafeMath.sol";
-import "../../utils/ReentrancyGuard.sol";
+import "../../openzeppelin/ReentrancyGuard.sol";
 import "../../openzeppelin/Ownable.sol";
 import "../../openzeppelin/Address.sol";
 import "../../interfaces/IWethERC20.sol";

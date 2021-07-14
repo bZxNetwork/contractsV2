@@ -3,17 +3,16 @@
  * Licensed under the Apache License, Version 2.0.
  */
 
-pragma solidity >=0.6.0 <0.8.0;
+pragma solidity ^0.7.6;
 pragma experimental ABIEncoderV2;
 
 /// SPDX-License-Identifier: MIT
 
 import "@openzeppelin-3.4.0/access/Ownable.sol";
 import "@openzeppelin-3.4.0/token/ERC20/IERC20.sol";
-
+import "./IToken.sol";
+import "./IBZx.sol";
 import "../../interfaces/IPriceFeeds.sol";
-import "../../interfaces/IToken.sol";
-import "../../interfaces/IBZx.sol";
 
 contract HelperImpl is Ownable {
     address public constant bZxProtocol = 0xD8Ee69652E4e4838f2531732a46d1f7F584F0b7f; // mainnet

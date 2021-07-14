@@ -9,7 +9,7 @@ pragma solidity 0.5.17;
 import "./Constants.sol";
 import "./Objects.sol";
 import "../mixins/EnumerableBytes32Set.sol";
-import "../utils/ReentrancyGuard.sol";
+import "../openzeppelin/ReentrancyGuard.sol";
 import "../openzeppelin/Ownable.sol";
 import "../openzeppelin/SafeMath.sol";
 
