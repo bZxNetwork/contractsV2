@@ -88,7 +88,16 @@ contract MasterChef_Polygon is Upgradeable {
     mapping(uint256 => bool) public isLocked;
 
     // total locked rewards for a user
-    mapping(address => uint256) public lockedRewards;
+    mapping(address => uint256) internal _lockedRewards;
+
+    // vestingStamp for a user
+    mapping(address => uint256) public userStartVestingStamp;
+
+    //default value if userStartVestingStamp[user] == 0
+    uint256 public constant startVestingStamp = 1625993882;
+
+    uint256 public constant vestingDuration = 15768000; //6 months (6 * 365 * 24 * 60 * 60)
+
 
     function initialize(
         GovToken _GOV,
@@ -278,6 +287,45 @@ contract MasterChef_Polygon is Upgradeable {
         return _pendingGOV(_pid, _user);
     }
 
+    function unlockedRewards(address _user)
+        public
+        view
+        returns (uint256)
+    {
+        uint256 _locked = _lockedRewards[_user];
+        if(_locked == 0){
+            return 0;
+        }
+
+        uint256 _userStartVestingStamp = userStartVestingStamp[_user];
+        return calculateUnlockedRewards(_locked, now, _userStartVestingStamp);
+    }
+
+    //This function will be internal after testing, _userStartVestingStamp will not be higher than now
+    function calculateUnlockedRewards(uint256 _locked, uint256 currentStamp, uint256 _userStartVestingStamp)
+        public
+        view
+        returns (uint256)
+    {
+        if(_userStartVestingStamp == 0){
+            _userStartVestingStamp = startVestingStamp;
+        }
+        uint256 _cliffDuration = currentStamp.sub(_userStartVestingStamp);
+        if(_cliffDuration >= vestingDuration)
+            return _locked;
+
+        uint256 _unlockedPerSecond = _locked.div(vestingDuration);
+        return _cliffDuration.mul(_unlockedPerSecond);
+    }
+
+    function lockedRewards(address _user)
+        external
+        view
+        returns (uint256)
+    {
+        return _lockedRewards[_user].sub(unlockedRewards(_user));
+    }
+
 
     // Update reward vairables for all pools. Be careful of gas spending!
     function massUpdatePools() public {
@@ -399,7 +447,7 @@ contract MasterChef_Polygon is Upgradeable {
 
         IERC20 lpToken = pool.lpToken;
         if (lpToken == GOV) {
-            uint256 availableAmount = userAmount.sub(lockedRewards[msg.sender]);
+            uint256 availableAmount = userAmount.sub(_lockedRewards[msg.sender]);
             if (_amount > availableAmount) {
                 _amount = availableAmount;
             }
@@ -423,7 +471,7 @@ contract MasterChef_Polygon is Upgradeable {
         uint256 _amount = user.amount;
         IERC20 lpToken = pool.lpToken;
         if (lpToken == GOV) {
-            uint256 availableAmount = _amount.sub(lockedRewards[msg.sender]);
+            uint256 availableAmount = _amount.sub(_lockedRewards[msg.sender]);
             if (_amount > availableAmount) {
                 _amount = availableAmount;
             }
@@ -446,11 +494,37 @@ contract MasterChef_Polygon is Upgradeable {
         }
 
         if (isLocked[_pid]) {
-            lockedRewards[msg.sender] = lockedRewards[msg.sender].add(_amount);
+            uint256 _unlockedRewards = unlockedRewards(msg.sender);
+            uint256 _locked = _lockedRewards[msg.sender];
+            _lockedRewards[msg.sender] = _locked.add(_amount).sub(_unlockedRewards);
+            uint256 _userStartVestingStamp = userStartVestingStamp[msg.sender];
+            userStartVestingStamp[msg.sender] = calculateVestingStartStamp(now, _userStartVestingStamp, _locked, _amount);
             _deposit(GOV_POOL_ID, _amount);
         } else {
             GOV.transfer(msg.sender, _amount);
         }
+    }
+
+    //This function will be internal after testing,
+    function calculateVestingStartStamp(uint256 currentStamp, uint256 _userStartVestingStamp, uint256 _lockedAmount, uint256 _depositAmount)
+        public
+        view
+        returns(uint256)
+    {
+        //VestingStartStamp will be distributed between
+        //_userStartVestingStamp (min) and currentStamp (max) depends on _lockedAmount and _depositAmount
+
+        //To avoid calculation on limit values
+        if(_lockedAmount == 0) return startVestingStamp;
+        if(_depositAmount >= _lockedAmount) return currentStamp;
+        if(_depositAmount == 0) return _userStartVestingStamp;
+
+        if(_userStartVestingStamp == 0){
+            _userStartVestingStamp = startVestingStamp;
+        }
+        uint256 cliffDuration = currentStamp.sub(_userStartVestingStamp);
+        uint256 depositShare = _depositAmount.mul(1e12).div(_lockedAmount);
+        return _userStartVestingStamp.add(cliffDuration.mul(depositShare).div(1e12));
     }
 
     // Update dev address by the previous dev.
