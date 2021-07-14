@@ -3,14 +3,26 @@
  * Licensed under the Apache License, Version 2.0.
  */
 
-pragma solidity >=0.6.0 <0.8.0;
+pragma solidity >=0.5.0 <=0.8.4;
 pragma experimental ABIEncoderV2;
-import "@openzeppelin-3.4.0/token/ERC20/IERC20.sol";
+// import "@openzeppelin-3.4.0/token/ERC20/IERC20.sol";
 
 // import "contracts/interfaces/IERC20.sol";
 /// SPDX-License-Identifier: Apache License, Version 2.0.
 
-interface IToken is IERC20 {
+interface IToken {
+
+    // IERC20 specification. hard including it to avoid compatibility of openzeppelin with different libraries
+    function totalSupply() external view returns (uint256);
+    function balanceOf(address account) external view returns (uint256);
+    function transfer(address recipient, uint256 amount) external returns (bool);
+    function allowance(address owner, address spender) external view returns (uint256);
+    function approve(address spender, uint256 amount) external returns (bool);
+    function transferFrom(address sender, address recipient, uint256 amount) external returns (bool);
+    event Transfer(address indexed from, address indexed to, uint256 value);
+    event Approval(address indexed owner, address indexed spender, uint256 value);
+
+
     function tokenPrice() external view returns (uint256);
 
     function mint(address receiver, uint256 depositAmount)
