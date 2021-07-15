@@ -34,7 +34,7 @@ def USDT(accounts, TestToken):
 @pytest.fixture(scope="module")
 def BZX(accounts,LoanMaintenance_2, interface,MasterChef_Polygon, bzxOwner):
     bzx =  Contract.from_abi("bzx", address=protocolAddress,
-                      abi=interface.IBZx.abi, owner=accounts[0])
+                             abi=interface.IBZx.abi, owner=accounts[0])
 
     bzx.replaceContract(LoanMaintenance_2.deploy({'from':bzxOwner}), {'from':bzxOwner})
     return bzx
@@ -129,4 +129,3 @@ def initBalance(account, token, lpToken, addBalance):
         USDC.approve(iUSDT, 2**256-1, {'from': account})
         iUSDC.mint(account, addBalance, {'from': account})
         iUSDC.approve(account, 2**256-1, {'from': account})
-

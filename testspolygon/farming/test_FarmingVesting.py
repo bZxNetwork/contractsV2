@@ -2,7 +2,7 @@
 
 import pytest
 
-from testspolygon.conftest import initBalance, requireMaticFork
+from conftest import initBalance, requireMaticFork
 from brownie import chain
 testdata = [
     ('MATIC', 'iMATIC', 8)
